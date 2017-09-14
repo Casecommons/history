@@ -21,25 +21,26 @@ const createTransitionManager = () => {
     // TODO: If another transition starts while we're still confirming
     // the previous one, we may end up in a weird state. Figure out the
     // best way to handle this.
-    if (prompt != null) {
-      const result = typeof prompt === 'function' ? prompt(location, action) : prompt
+    if (prompt === null) {
+      callback(true)
+      return
+    }
 
-      if (typeof result === 'string') {
-        if (typeof getUserConfirmation === 'function') {
-          getUserConfirmation(result, callback)
-        } else {
-          warning(
-            false,
-            'A history needs a getUserConfirmation function in order to use a prompt message'
-          )
+    const result = typeof prompt === 'function' ? prompt(location, action) : prompt
+    if (typeof result !== 'string') {
+      // Return false from a transition hook to cancel the transition.
+      callback(result !== false)
+      return
+    }
 
-          callback(true)
-        }
-      } else {
-        // Return false from a transition hook to cancel the transition.
-        callback(result !== false)
-      }
+    if (typeof getUserConfirmation === 'function') {
+      getUserConfirmation(result, callback)
     } else {
+      warning(
+        false,
+        'A history needs a getUserConfirmation function in order to use a prompt message'
+      )
+
       callback(true)
     }
   }
